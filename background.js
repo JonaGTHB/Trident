@@ -58,7 +58,7 @@ function cycleThroughTabs(urls, newIndex, reopenClosedTabs) {
 function deleteCurrentTab(currentUrl) {
     chrome.notifications.create('save-url-notification', {
         type: 'basic',
-        iconUrl: 'plus.png',
+        iconUrl: 'images/minus.png',
         title: 'Trident: Tab removed!',
         message: 'Removed current tab from trident.'
     });
@@ -75,7 +75,7 @@ function deleteCurrentTab(currentUrl) {
 function saveCurrentUrl(urlToSave) {
     chrome.notifications.create('save-url-notification', {
         type: 'basic',
-        iconUrl: 'plus.png',
+        iconUrl: 'images/plus.png',
         title: 'Trident: Tab added!',
         message: 'Added current tab to trident.'
     });
