@@ -4,79 +4,76 @@ function openTabWithUrl(url, reopenClosedTabs) {
         if (existingTab) {
             chrome.tabs.update(existingTab.id, { active: true });
         } else if (reopenClosedTabs) {
-            chrome.tabs.create({ url: url });
+            chrome.tabs.create({ url });
         } else {
-            chrome.storage.sync.get(["urls"], function(result) {
-                const updatedUrls = result.urls.filter(item => item !== url);
-                chrome.storage.sync.set({ "urls": updatedUrls });
-            });
+            removeUrlFromStorage(url);
         }
     });
 }
 
-chrome.commands.onCommand.addListener(function(command) {
+function removeUrlFromStorage(urlToRemove) {
+    chrome.storage.sync.get(["urls"], function(result) {
+        const updatedUrls = (result.urls || []).filter(url => url !== urlToRemove);
+        chrome.storage.sync.set({ "urls": updatedUrls });
+    });
+}
+
+function handleCommand(command) {
     chrome.storage.sync.get(["urls", "reopenClosedTabs"], function(result) {
-        const urls = result.urls || [];
-        const reopenClosedTabs = result.reopenClosedTabs || false;
-        if (urls.length === 0) return;
+        const { urls = [], reopenClosedTabs = false } = result;
+        if (urls.length === 0 && command !== "save-current-url") return;
 
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
             if (tabs.length === 0) return;
 
-            const currentTab = tabs[0];
-            const currentIndex = urls.findIndex(url => url === currentTab.url);
+            const currentUrl = tabs[0].url;
+            const currentIndex = urls.findIndex(url => url === currentUrl);
 
-            if (command === "cycle-forward") {
-                let nextIndex = currentIndex + 1 === urls.length ? 0 : currentIndex + 1;
-                openTabWithUrl(urls[nextIndex], reopenClosedTabs);
-            } else if (command === "cycle-backward") {
-                let prevIndex = currentIndex - 1 < 0 ? urls.length - 1 : currentIndex - 1;
-                openTabWithUrl(urls[prevIndex], reopenClosedTabs);
+            switch (command) {
+                case "cycle-forward":
+                    cycleThroughTabs(urls, currentIndex + 1, reopenClosedTabs);
+                    break;
+                case "cycle-backward":
+                    cycleThroughTabs(urls, currentIndex - 1, reopenClosedTabs);
+                    break;
+                case "delete-current-tab":
+                    deleteCurrentTab(currentUrl);
+                    break;
+                case "save-current-url":
+                    saveCurrentUrl(currentUrl);
+                    break;
             }
         });
     });
+}
 
-    if (command === "delete-current-tab") {
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            if (tabs.length > 0) {
-                const currentUrl = tabs[0].url;
-                chrome.storage.sync.get(["urls"], function(result) {
-                    const urls = result.urls || [];
-                    const updatedUrls = urls.filter(url => url !== currentUrl);
-
-                    if (urls.length !== updatedUrls.length) {
-                        chrome.storage.sync.set({ "urls": updatedUrls }, function() {
-                            console.log("URL removed from the list:", currentUrl);
-                        });
-                    } else {
-                        console.log("URL not found in the list:", currentUrl);
-                    }
-                });
-            }
-        });
+function cycleThroughTabs(urls, newIndex, reopenClosedTabs) {
+    if (urls.length === 0) {
+        openTabWithUrl(urls[0], reopenClosedTabs);
     }
+    const index = newIndex < 0 ? urls.length - 1 : newIndex % urls.length;
+    openTabWithUrl(urls[index], reopenClosedTabs);
+}
 
-    if (command === "save-current-url") {
-        console.log("Saving the current URL...");
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            const currentTab = tabs[0];
-            if (!currentTab) return;
+function deleteCurrentTab(currentUrl) {
+    chrome.storage.sync.get(["urls"], function(result) {
+        const urls = result.urls || [];
+        const updatedUrls = urls.filter(url => url !== currentUrl);
+        if (urls.length !== updatedUrls.length) {
+            chrome.storage.sync.set({ "urls": updatedUrls });
+        }
+    });
+}
 
-            const urlToSave = currentTab.url;
-            console.log("URL to save:", urlToSave);
-            chrome.storage.sync.get(["urls"], function(result) {
-                const existingUrls = result.urls || [];
-                console.log("Existing URLs:", existingUrls);
-                if (!existingUrls.includes(urlToSave)) {
-                    const updatedUrls = [...existingUrls, urlToSave];
-                    chrome.storage.sync.set({ "urls": updatedUrls }, function() {
-                        console.log("URL added to the list:", urlToSave);
-                    });
-                } else {
-                    console.log("URL already exists in the list:", urlToSave);
-                }
-            });
-        });
-    }
-});
+function saveCurrentUrl(urlToSave) {
+    chrome.storage.sync.get(["urls"], function(result) {
+        const urls = result.urls || [];
+        if (!urls.includes(urlToSave)) {
+            urls.push(urlToSave);
+            chrome.storage.sync.set({ "urls": urls });
+        }
+    });
+}
+
+chrome.commands.onCommand.addListener(handleCommand);
 
