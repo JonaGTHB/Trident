@@ -56,6 +56,13 @@ function cycleThroughTabs(urls, newIndex, reopenClosedTabs) {
 }
 
 function deleteCurrentTab(currentUrl) {
+    chrome.notifications.create('save-url-notification', {
+        type: 'basic',
+        iconUrl: 'plus.png',
+        title: 'Trident: Tab removed!',
+        message: 'Removed current tab from trident.'
+    });
+
     chrome.storage.sync.get(["urls"], function(result) {
         const urls = result.urls || [];
         const updatedUrls = urls.filter(url => url !== currentUrl);
@@ -66,6 +73,12 @@ function deleteCurrentTab(currentUrl) {
 }
 
 function saveCurrentUrl(urlToSave) {
+    chrome.notifications.create('save-url-notification', {
+        type: 'basic',
+        iconUrl: 'plus.png',
+        title: 'Trident: Tab added!',
+        message: 'Added current tab to trident.'
+    });
     chrome.storage.sync.get(["urls"], function(result) {
         const urls = result.urls || [];
         if (!urls.includes(urlToSave)) {

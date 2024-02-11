@@ -57,16 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 liElement.setAttribute('draggable', true);
                 liElement.setAttribute('data-url', url);
 
-
-                const textNode = document.createTextNode(url);
+                // Truncate URL if it's longer than 50 characters
+                const displayUrl = url.length > 50 ? url.substring(0, 47) + '...' : url;
+                const textNode = document.createTextNode(displayUrl);
                 liElement.appendChild(textNode);
-
 
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Delete';
                 deleteButton.setAttribute('class', 'delete-btn');
                 deleteButton.onclick = function() {
-
                     const updatedUrls = urls.filter((_, i) => i !== index);
                     chrome.storage.sync.set({ "urls": updatedUrls }, function() {
                         loadUrls();
