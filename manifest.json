@@ -1,0 +1,51 @@
+{
+    "manifest_version": 3,
+    "name": "Tab Manager",
+    "version": "1.0",
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "images/icon16.png",
+            "48": "images/icon48.png",
+            "128": "images/icon128.png"
+        }
+    },
+    "commands": {
+        "save-current-url": {
+            "suggested_key": {
+                "default": "Ctrl+G",
+                "mac": "Command+Shift+A"
+            },
+            "description": "Save current tab's URL"
+        },
+        "cycle-forward": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+X",
+                "mac": "Command+Shift+X"
+            },
+            "description": "Cycle forward through tabs"
+        },
+        "cycle-backward": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Z",
+                "mac": "Command+Shift+Z"
+            },
+            "description": "Cycle backward through tabs"
+        },
+        "delete-current-tab": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+D",
+                "mac": "Command+Shift+D"
+            },
+            "description": "Delete current tab"
+        }
+    }
+}
